@@ -17,7 +17,6 @@ from lavis.datasets.datasets.caption_datasets import CaptionDataset, CaptionEval
 
 COCOCapDataset = CaptionDataset
 
-
 class COCOCapEvalDataset(CaptionEvalDataset):
     def __init__(self, vis_processor, text_processor, vis_root, ann_paths):
         """

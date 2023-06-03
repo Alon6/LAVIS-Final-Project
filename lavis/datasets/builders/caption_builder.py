@@ -18,6 +18,10 @@ from lavis.datasets.datasets.video_caption_datasets import (
     VideoCaptionEvalDataset,
 )
 
+from lavis.datasets.datasets.DanHadani_datasets import (
+    DanHadaniDataset,
+    DanHadaniEvalDataset,
+)
 
 @registry.register_builder("coco_caption")
 class COCOCapBuilder(BaseDatasetBuilder):
@@ -65,4 +69,14 @@ class VATEXCapBuilder(BaseDatasetBuilder):
 
     DATASET_CONFIG_DICT = {
         "default": "configs/datasets/vatex/defaults_cap.yaml",
+    }
+
+
+@registry.register_builder("DanHadani")
+class DanHadaniBuilder(BaseDatasetBuilder):
+    train_dataset_cls = DanHadaniDataset
+    eval_dataset_cls = DanHadaniEvalDataset
+
+    DATASET_CONFIG_DICT = {
+        "default": "configs/datasets/DanHadani/defaults.yaml",
     }

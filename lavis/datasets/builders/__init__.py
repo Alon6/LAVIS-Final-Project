@@ -11,6 +11,7 @@ from lavis.datasets.builders.caption_builder import (
     MSRVTTCapBuilder,
     MSVDCapBuilder,
     VATEXCapBuilder,
+    DanHadaniBuilder,
 )
 from lavis.datasets.builders.image_text_pair_builder import (
     ConceptualCaption12MBuilder,
@@ -37,7 +38,6 @@ from lavis.datasets.builders.retrieval_builder import (
     Flickr30kBuilder,
 )
 from lavis.datasets.builders.dialogue_builder import AVSDDialBuilder
-
 from lavis.common.registry import registry
 
 __all__ = [
@@ -63,7 +63,9 @@ __all__ = [
     "VGCaptionBuilder",
     "VGVQABuilder",
     "AVSDDialBuilder",
+    "DanHadaniBuilder",
 ]
+
 
 
 def load_dataset(name, cfg_path=None, vis_path=None, data_type=None):

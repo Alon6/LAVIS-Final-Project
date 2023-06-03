@@ -78,6 +78,7 @@ __all__ = [
     "VisionTransformerEncoder",
     "XBertLMHeadDecoder",
     "GPTDialogue",
+    "load_model_and_preprocess",
 ]
 
 
