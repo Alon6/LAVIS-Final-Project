@@ -2,8 +2,6 @@
 
 # my (Michael Rodel)  API key is: bx4AHabZdoyhD2HUkbm7HSecspuCqplmUi81PrEJ
 
-#TODO: find another implementation to calculate the distance between 2 images
-#TODO: to translate Hebrew unicode to English, and write Dan, Yaniv, and Alon about the translation problem, to compelte the translation using Google's API
 
 
 import numpy as np
@@ -78,7 +76,8 @@ def dist_img_calc(img_path_1, img_path_2):
 
     return L2Norm(H1, H2)
 
-def alon_api():
+
+def create_caption(raw_image):
     # This is a script which evaluates the images with the BLIP module
     # setup device to use
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -86,9 +85,22 @@ def alon_api():
     # this also loads the associated image processors
     model, vis_processors, _ = load_model_and_preprocess(name="blip_caption", model_type="base_coco", is_eval=True,
                                                          device=device)
+    # preprocess the image
+    # vis_processors stores image transforms for "train" and "eval" (validation / testing / inference)
+    image = vis_processors["eval"](raw_image).unsqueeze(0).to(device)
+
+    # generate caption (this caption is the output of the BLIP model)
+
+    print("this is the caption of BLIP: ")
+    print(model.generate({"image": image}))
+
+
+def alon_api():
+
     # load sample images
     response_parse = 0
     text = ""
+    text_dict = []
     for i in range(3):
         response = requests.get(
             "https://api.nli.org.il/openlibrary/search?api_key=AnGdUMDNPbU7IhCHgbreKF4Lou5spSCYklIFpWrc"
@@ -97,55 +109,49 @@ def alon_api():
             "&facet=local7,include,%D7%90%D7%A8%D7%9B%D7%99%D7%95%D7%9F%20%D7%93%D7%9F%20%D7%94%D7%93%D7%A0%D7%99.&mfacet=rtype,include,photograph,1&mfacet=lang,include,zxx,2&lang=iw_IL&offset=0"
             "&material_type=photograph&output_format=json&result_page=" + str(i), verify=False)
         text += json.dumps(response.json(), indent=4)
+        text_dict += json.loads(response.text)
     # print(text) CHANGED
+    print(text)
     json_data = []
-    for i in range(20):
-        response_parse = text.find("1.1/thumbnail", response_parse) + 1
-        image_add = text[text.find("value", response_parse) + 9:text.find("\"", text.find("value", response_parse) + 9)]
-        fd = urllib.urlopen(image_add)
-        image_file = io.BytesIO(fd.read())
-        raw_image = Image.open(image_file).convert("RGB")
-        image_path = "C:/export/home/.cache/lavis/DanHadani/images"
-        raw_image.save(r'' + image_path + "/" + str(i) + '.png')
+    for i in range(60):
+        if "http://purl.org/dc/elements/1.1/relation" in text_dict[i]:
+            response_parse = text.find("1.1/thumbnail", response_parse) + 1
+            image_add = text_dict[i]["http://purl.org/dc/elements/1.1/thumbnail"][0]
+            fd = urllib.urlopen(image_add.get("@value"))
+            image_file = io.BytesIO(fd.read())
+            raw_image = Image.open(image_file).convert("RGB")
+            image_path = "C:/export/home/.cache/lavis/DanHadani/images"
+            raw_image.save(r'' + image_path + "/" + str(i) + '.png')
+#           create_caption(raw_image)
+
+
+            # in order to get the image description use the manifest API
+            response_parse = text.find("1.1/relation", response_parse) + 1
+            caption_request = text_dict[i]["http://purl.org/dc/elements/1.1/relation"][0]
+            caption_response = requests.get(caption_request.get("@id"))
+
         # begin new
-        # raw_image.show()
+            caption_dict = json.loads(caption_response.text)
+            label_value = caption_dict['sequences'][0]['label']
+            # print("this is the 'real caption' before extracting the label: " + caption_text)
+            # print("this is the real caption before translation: ")
+            # print(label_value)
+            print("this is the real caption (after translation): ")
+            print(translate_cap(label_value))
+            print()
+            tmp = {}
+            tmp["image_id"] = str(i)
+            tmp["image"] = image_path + "/" + str(i) + '.png'
+            tmp["caption"] = translate_cap(label_value)
+            json_data.append(tmp)
         # end new
-
-        # preprocess the image
-        # vis_processors stores image transforms for "train" and "eval" (validation / testing / inference)
-        image = vis_processors["eval"](raw_image).unsqueeze(0).to(device)
-
-        # generate caption (this caption is the output of the BLIP model)
-
-        print("this is the caption of BLIP: ")
-        print(model.generate({"image": image}))
-        # in order to get the image description use the manifest API
-        response_parse = text.find("1.1/relation", response_parse) + 1
-        caption_request = text[text.find("id", response_parse) + 6:text.find("\"", text.find("id", response_parse) + 6)]
-        caption_response = requests.get(caption_request)
-
-    # begin new
-        caption_dict = json.loads(caption_response.text)
-        label_value = caption_dict['sequences'][0]['label']
-        # print("this is the 'real caption' before extracting the label: " + caption_text)
-        # print("this is the real caption before translation: ")
-        # print(label_value)
-        print("this is the real caption (after translation): ")
-        print(translate_cap(label_value))
-        print()
-        tmp = {}
-        tmp["image_id"] = str(i)
-        tmp["image"] = image_path + "/" + str(i) + '.png'
-        tmp["caption"] = translate_cap(label_value)
-        json_data.append(tmp)
-    # end new
-    # key: AnGdUMDNPbU7IhCHgbreKF4Lou5spSCYklIFpWrc
-    with open('DanHadani/annotations/DanHadani_train.json', 'w') as outfile:
-        json.dump(json_data, outfile)
-    with open('DanHadani/annotations/DanHadani_val.json', 'w') as outfile:
-        json.dump(json_data, outfile)
-    with open('DanHadani/annotations/DanHadani_test.json', 'w') as outfile:
-        json.dump(json_data, outfile)
+        # key: AnGdUMDNPbU7IhCHgbreKF4Lou5spSCYklIFpWrc
+        with open('DanHadani/annotations/DanHadani_train.json', 'w') as outfile:
+           json.dump(json_data, outfile)
+        with open('DanHadani/annotations/DanHadani_val.json', 'w') as outfile:
+         json.dump(json_data, outfile)
+        with open('DanHadani/annotations/DanHadani_test.json', 'w') as outfile:
+         json.dump(json_data, outfile)
 def translate_cap(cap):
     # we use the API of Microsoft to translate the label to English
 
