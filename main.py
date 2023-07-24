@@ -120,7 +120,7 @@ def alon_api():
             fd = urllib.urlopen(image_add.get("@value"))
             image_file = io.BytesIO(fd.read())
             raw_image = Image.open(image_file).convert("RGB")
-            image_path = "C:/export/home/.cache/lavis/DanHadani/images"
+            image_path = "DanHadani/images"
             raw_image.save(r'' + image_path + "/" + str(i) + '.png')
 #           create_caption(raw_image)
 
