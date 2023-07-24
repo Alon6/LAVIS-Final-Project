@@ -34,10 +34,10 @@ class DanHadaniEvalDataset(CaptionEvalDataset):
 
         image = self.vis_processor(image)
 
-        img_id = ann["img_id"]
+        img_id = ann["image_id"]
 
         return {
             "image": image,
             "image_id": img_id,
-            "instance_id": ann["instance_id"],
+            "instance_id": ann["caption"],
         }
