@@ -101,36 +101,39 @@ def alon_api():
     response_parse = 0
     text = ""
     text_dict = []
+    for i in range(1):
+        response = requests.get(
+            "https://api.nli.org.il/openlibrary/search?api_key=AnGdUMDNPbU7IhCHgbreKF4Lou5spSCYklIFpWrc"
+            "&query=any,contains,%D7%90%D7%A8%D7%9B%D7%99%D7%95%D7%9F%20%D7%93%D7%9F%20%D7%94%D7%93%D7%A0%D7%99"
+            "&availability_type=online_access"
+            "&material_type=photograph&output_format=json&result_page=100", verify=False)
+        text += json.dumps(response.json(), indent=4)
+        text_dict += json.loads(response.text)
     for i in range(3):
         response = requests.get(
             "https://api.nli.org.il/openlibrary/search?api_key=AnGdUMDNPbU7IhCHgbreKF4Lou5spSCYklIFpWrc"
             "&query=any,contains,%D7%90%D7%A8%D7%9B%D7%99%D7%95%D7%9F%20%D7%93%D7%9F%20%D7%94%D7%93%D7%A0%D7%99"
-            "&tab=default_tab&search_scope=Local&vid=NLI"
-            "&facet=local7,include,%D7%90%D7%A8%D7%9B%D7%99%D7%95%D7%9F%20%D7%93%D7%9F%20%D7%94%D7%93%D7%A0%D7%99.&mfacet=rtype,include,photograph,1&mfacet=lang,include,zxx,2&lang=iw_IL&offset=0"
+            "&availability_type=online_access"
             "&material_type=photograph&output_format=json&result_page=" + str(i), verify=False)
         text += json.dumps(response.json(), indent=4)
         text_dict += json.loads(response.text)
-    # print(text) CHANGED
     print(text)
     json_data = []
     for i in range(60):
+        # check if the item's metadata structure is matching Dan Hadani's pictures metadata structure
         if "http://purl.org/dc/elements/1.1/relation" in text_dict[i]:
-            response_parse = text.find("1.1/thumbnail", response_parse) + 1
+            # get image link from the metadata
             image_add = text_dict[i]["http://purl.org/dc/elements/1.1/thumbnail"][0]
             fd = urllib.urlopen(image_add.get("@value"))
             image_file = io.BytesIO(fd.read())
             raw_image = Image.open(image_file).convert("RGB")
-            image_path = "DanHadani/images"
+            # save the image
+            image_path = "C:/export/home/.cache/lavis/DanHadani/images"
             raw_image.save(r'' + image_path + "/" + str(i) + '.png')
 #           create_caption(raw_image)
-
-
             # in order to get the image description use the manifest API
-            response_parse = text.find("1.1/relation", response_parse) + 1
             caption_request = text_dict[i]["http://purl.org/dc/elements/1.1/relation"][0]
             caption_response = requests.get(caption_request.get("@id"))
-
-        # begin new
             caption_dict = json.loads(caption_response.text)
             label_value = caption_dict['sequences'][0]['label']
             # print("this is the 'real caption' before extracting the label: " + caption_text)
@@ -139,19 +142,20 @@ def alon_api():
             print("this is the real caption (after translation): ")
             print(translate_cap(label_value))
             print()
+            # add the annotation to the variable json_data
             tmp = {}
             tmp["image_id"] = str(i)
             tmp["image"] = image_path + "/" + str(i) + '.png'
             tmp["caption"] = translate_cap(label_value)
             json_data.append(tmp)
-        # end new
-        # key: AnGdUMDNPbU7IhCHgbreKF4Lou5spSCYklIFpWrc
-        with open('DanHadani/annotations/DanHadani_train.json', 'w') as outfile:
+        # save the annotations in a json file
+        with open('C:/export/home/.cache/lavis/DanHadani/annotations/DanHadani_train.json', 'w') as outfile:
            json.dump(json_data, outfile)
-        with open('DanHadani/annotations/DanHadani_val.json', 'w') as outfile:
+        with open('C:/export/home/.cache/lavis/DanHadani/annotations/DanHadani_val.json', 'w') as outfile:
          json.dump(json_data, outfile)
-        with open('DanHadani/annotations/DanHadani_test.json', 'w') as outfile:
+        with open('C:/export/home/.cache/lavis/DanHadani/annotations/DanHadani_test.json', 'w') as outfile:
          json.dump(json_data, outfile)
+         # key: AnGdUMDNPbU7IhCHgbreKF4Lou5spSCYklIFpWrc
 def translate_cap(cap):
     # we use the API of Microsoft to translate the label to English
 
