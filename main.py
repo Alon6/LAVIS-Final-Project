@@ -104,7 +104,7 @@ def alon_api():
     for i in range(1):
         response = requests.get(
             "https://api.nli.org.il/openlibrary/search?api_key=AnGdUMDNPbU7IhCHgbreKF4Lou5spSCYklIFpWrc"
-            "&query=any,contains,%D7%90%D7%A8%D7%9B%D7%99%D7%95%D7%9F%20%D7%93%D7%9F%20%D7%94%D7%93%D7%A0%D7%99"
+            "&query=any,contains,%D7%90%D7%A8%D7%9B%D7%99%D7%95%D7%9F%20%D7%93%D7%9F%20%D7%94%D7%93%D7%A0%D7%99,AND;system_number,exact,990039988670205171"
             "&availability_type=online_access"
             "&material_type=photograph&output_format=json&result_page=100", verify=False)
         text += json.dumps(response.json(), indent=4)
@@ -128,7 +128,7 @@ def alon_api():
             image_file = io.BytesIO(fd.read())
             raw_image = Image.open(image_file).convert("RGB")
             # save the image
-            image_path = "C:/export/home/.cache/lavis/DanHadani/images"
+            image_path = os.path.dirname(os.path.abspath(__file__)) + "/DanHadani/images"
             raw_image.save(r'' + image_path + "/" + str(i) + '.png')
 #           create_caption(raw_image)
             # in order to get the image description use the manifest API
@@ -149,11 +149,11 @@ def alon_api():
             tmp["caption"] = translate_cap(label_value)
             json_data.append(tmp)
         # save the annotations in a json file
-        with open('C:/export/home/.cache/lavis/DanHadani/annotations/DanHadani_train.json', 'w') as outfile:
+        with open(os.path.dirname(os.path.abspath(__file__)) + '/DanHadani/annotations/DanHadani_train.json', 'w') as outfile:
            json.dump(json_data, outfile)
-        with open('C:/export/home/.cache/lavis/DanHadani/annotations/DanHadani_val.json', 'w') as outfile:
+        with open(os.path.dirname(os.path.abspath(__file__)) + '/DanHadani/annotations/DanHadani_val.json', 'w') as outfile:
          json.dump(json_data, outfile)
-        with open('C:/export/home/.cache/lavis/DanHadani/annotations/DanHadani_test.json', 'w') as outfile:
+        with open(os.path.dirname(os.path.abspath(__file__)) + '/DanHadani/annotations/DanHadani_test.json', 'w') as outfile:
          json.dump(json_data, outfile)
          # key: AnGdUMDNPbU7IhCHgbreKF4Lou5spSCYklIFpWrc
 def translate_cap(cap):
