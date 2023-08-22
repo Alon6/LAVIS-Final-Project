@@ -152,6 +152,7 @@ class BaseDatasetBuilder:
         storage_path = self.config.build_info.get(self.data_type).storage
         storage_path = utils.get_cache_path(storage_path)
 
+        print("the storage path is: ", storage_path)
         if not os.path.exists(storage_path):
             warnings.warn(
                 f"""
