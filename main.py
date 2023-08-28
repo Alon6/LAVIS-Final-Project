@@ -6,6 +6,11 @@
 
 import numpy as np
 from collections import Counter
+
+from pycocoevalcap.bleu.bleu import Bleu
+from pycocoevalcap.cider.cider import Cider
+from pycocoevalcap.meteor.meteor import Meteor
+from pycocoevalcap.rouge.rouge import Rouge
 from transformers import BlipProcessor, BlipForConditionalGeneration
 
 import json
@@ -95,21 +100,13 @@ def create_caption(raw_image):
     print(model.generate({"image": image}))
 
 
-def alon_api():
+def get_and_save_data():
 
     # load sample images
     response_parse = 0
     text = ""
     text_dict = []
-    for i in range(1):
-        response = requests.get(
-            "https://api.nli.org.il/openlibrary/search?api_key=AnGdUMDNPbU7IhCHgbreKF4Lou5spSCYklIFpWrc"
-            "&query=any,contains,%D7%90%D7%A8%D7%9B%D7%99%D7%95%D7%9F%20%D7%93%D7%9F%20%D7%94%D7%93%D7%A0%D7%99,AND;system_number,exact,990039988670205171"
-            "&availability_type=online_access"
-            "&material_type=photograph&output_format=json&result_page=100", verify=False)
-        text += json.dumps(response.json(), indent=4)
-        text_dict += json.loads(response.text)
-    for i in range(3):
+    for i in range(6):
         response = requests.get(
             "https://api.nli.org.il/openlibrary/search?api_key=AnGdUMDNPbU7IhCHgbreKF4Lou5spSCYklIFpWrc"
             "&query=any,contains,%D7%90%D7%A8%D7%9B%D7%99%D7%95%D7%9F%20%D7%93%D7%9F%20%D7%94%D7%93%D7%A0%D7%99"
@@ -119,7 +116,8 @@ def alon_api():
         text_dict += json.loads(response.text)
     print(text)
     json_data = []
-    for i in range(60):
+    test_json_data = []
+    for i in range(180):
         # check if the item's metadata structure is matching Dan Hadani's pictures metadata structure
         if "http://purl.org/dc/elements/1.1/relation" in text_dict[i]:
             # get image link from the metadata
@@ -136,6 +134,7 @@ def alon_api():
             caption_response = requests.get(caption_request.get("@id"))
             caption_dict = json.loads(caption_response.text)
             label_value = caption_dict['sequences'][0]['label']
+            translated_value = translate_cap(label_value)
             # print("this is the 'real caption' before extracting the label: " + caption_text)
             # print("this is the real caption before translation: ")
             # print(label_value)
@@ -146,8 +145,12 @@ def alon_api():
             tmp = {}
             tmp["image_id"] = str(i)
             tmp["image"] = image_path + "/" + str(i) + '.png'
-            tmp["caption"] = translate_cap(label_value)
+            tmp["caption"] = translate_cap(translated_value)
             json_data.append(tmp)
+            tmp = {}
+            tmp["image_id"] = str(i)
+            tmp["caption"] = translate_cap(translated_value)
+            test_json_data.append(tmp)
         # save the annotations in a json file
         with open(os.path.dirname(os.path.abspath(__file__)) + '/DanHadani/annotations/DanHadani_train.json', 'w') as outfile:
            json.dump(json_data, outfile)
@@ -155,6 +158,8 @@ def alon_api():
          json.dump(json_data, outfile)
         with open(os.path.dirname(os.path.abspath(__file__)) + '/DanHadani/annotations/DanHadani_test.json', 'w') as outfile:
          json.dump(json_data, outfile)
+        with open(os.path.dirname(os.path.abspath(__file__)) + '/DanHadani/results/DanHadani_real_captions.json','w') as outfile:
+         json.dump(test_json_data, outfile)
          # key: AnGdUMDNPbU7IhCHgbreKF4Lou5spSCYklIFpWrc
 def translate_cap(cap):
     # we use the API of Microsoft to translate the label to English
@@ -169,6 +174,44 @@ def L2Norm(H1, H2):
     for i in range(len(H1)):
         distance += np.square(H1[i] - H2[i])
     return np.sqrt(distance)
+def calc_scores(ref, hypo):
+    """
+    ref, dictionary of reference sentences (id, sentence)
+    hypo, dictionary of hypothesis sentences (id, sentence)
+    score, dictionary of scores
+    """
+    scorers = [
+        (Bleu(4), ["Bleu_1", "Bleu_2", "Bleu_3", "Bleu_4"]),
+        (Meteor(),"METEOR"),
+        (Rouge(), "ROUGE_L"),
+        (Cider(), "CIDEr")
+    ]
+    final_scores = {}
+    for scorer, method in scorers:
+        score, scores = scorer.compute_score(ref, hypo)
+        if type(score) == list:
+            for m, s in zip(method, score):
+                final_scores[m] = s
+        else:
+            final_scores[method] = score
+    return final_scores
+def print_scores():
+    f = open(os.path.dirname(os.path.abspath(__file__)) + '/DanHadani/results/DanHadani_real_captions.json', )
+    raw_ref = json.load(f)
+    ref = dict()
+    for item in raw_ref:
+        ref[item["image_id"]] = []
+        ref[item["image_id"]].append(item["caption"])
+    f = open(os.path.dirname(os.path.abspath(__file__)) + '/DanHadani/results/DanHadani_computed_captions.json', )
+    raw_hypo = json.load(f)
+    hypo = dict()
+    for item in raw_hypo:
+        hypo[item["image_id"]] = []
+        hypo[item["image_id"]].append(item["caption"])
+    scores = calc_scores(ref, hypo)
+    for method, score in scores.items():
+        print("The score for method " + method + " is: " + str(score))
+
 
 if __name__ == '__main__':
     # img_path_1 = 'TheWesternWall.png'
@@ -183,6 +226,7 @@ if __name__ == '__main__':
     # print("The distance between TheWesternWall and TheCarmelForest is: {}".format(d13))
     # print("The distance between LionsGate and TheCarmelForest is: {}".format(d23))
 
-    alon_api()
+    #get_and_save_data()
+    print_scores()
 
 
