@@ -13,6 +13,10 @@ from pycocoevalcap.meteor.meteor import Meteor
 from pycocoevalcap.rouge.rouge import Rouge
 from transformers import BlipProcessor, BlipForConditionalGeneration
 
+from sklearn.model_selection import train_test_split
+
+import torchvision.transforms as transforms
+
 import json
 import requests
 import torch
@@ -100,6 +104,23 @@ def create_caption(raw_image):
     print(model.generate({"image": image}))
 
 
+def resize(image):
+    # Define the target image size
+    target_size = (384, 384)
+
+    # # Create a transformation to resize and normalize the image
+    # transform = transforms.Compose([
+    #     transforms.Resize(target_size),
+    #     transforms.ToTensor(),
+    #     transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
+    # ])
+    # resized_image = transform(image)
+    # return transforms.ToPILImage()(resized_image)
+
+    resized_image = image.resize(target_size)
+    return resized_image
+
+
 def get_and_save_data():
 
     # load sample images
@@ -117,7 +138,8 @@ def get_and_save_data():
     print(text)
     json_data = []
     test_json_data = []
-    for i in range(180):
+    # train
+    for i in range(50):
         # check if the item's metadata structure is matching Dan Hadani's pictures metadata structure
         if "http://purl.org/dc/elements/1.1/relation" in text_dict[i]:
             # get image link from the metadata
@@ -125,6 +147,10 @@ def get_and_save_data():
             fd = urllib.urlopen(image_add.get("@value"))
             image_file = io.BytesIO(fd.read())
             raw_image = Image.open(image_file).convert("RGB")
+
+            # resize the image
+            raw_image = resize(raw_image)
+
             # save the image
             image_path = os.path.dirname(os.path.abspath(__file__)) + "/DanHadani/images"
             raw_image.save(r'' + image_path + "/" + str(i) + '.png')
@@ -145,19 +171,22 @@ def get_and_save_data():
             tmp = {}
             tmp["image_id"] = str(i)
             tmp["image"] = image_path + "/" + str(i) + '.png'
-            tmp["caption"] = translate_cap(translated_value)
+            tmp["caption"] = translated_value
             json_data.append(tmp)
+        train, test = train_test_split(json_data, test_size=0.1)
+        val, test = train_test_split(test, test_size=0.5)
+        for item in val:
             tmp = {}
-            tmp["image_id"] = str(i)
-            tmp["caption"] = translate_cap(translated_value)
+            tmp["image_id"] = item["image_id"]
+            tmp["caption"] = item["caption"]
             test_json_data.append(tmp)
         # save the annotations in a json file
         with open(os.path.dirname(os.path.abspath(__file__)) + '/DanHadani/annotations/DanHadani_train.json', 'w') as outfile:
-           json.dump(json_data, outfile)
+           json.dump(train, outfile)
         with open(os.path.dirname(os.path.abspath(__file__)) + '/DanHadani/annotations/DanHadani_val.json', 'w') as outfile:
-         json.dump(json_data, outfile)
+         json.dump(val, outfile)
         with open(os.path.dirname(os.path.abspath(__file__)) + '/DanHadani/annotations/DanHadani_test.json', 'w') as outfile:
-         json.dump(json_data, outfile)
+         json.dump(test, outfile)
         with open(os.path.dirname(os.path.abspath(__file__)) + '/DanHadani/results/DanHadani_real_captions.json','w') as outfile:
          json.dump(test_json_data, outfile)
          # key: AnGdUMDNPbU7IhCHgbreKF4Lou5spSCYklIFpWrc
@@ -214,19 +243,7 @@ def print_scores():
 
 
 if __name__ == '__main__':
-    # img_path_1 = 'TheWesternWall.png'
-    # img_path_2 = 'LionsGate.png'
-    # img_path_3 = 'TheCarmelForest.png'
-    #
-    # d12 = dist_img_calc(img_path_1, img_path_2)
-    # d13 = dist_img_calc(img_path_1, img_path_3)
-    # d23 = dist_img_calc(img_path_2, img_path_3)
-    #
-    # print("The distance between TheWesternWall and LionsGate is: {}".format(d12))
-    # print("The distance between TheWesternWall and TheCarmelForest is: {}".format(d13))
-    # print("The distance between LionsGate and TheCarmelForest is: {}".format(d23))
-
-    #get_and_save_data()
+    # get_and_save_data()
     print_scores()
 
 

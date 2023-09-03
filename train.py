@@ -34,7 +34,6 @@ from lavis.tasks import *
 
 def parse_args():
     parser = argparse.ArgumentParser(description="Training")
-
     parser.add_argument("--cfg-path", required=True, help="path to configuration file.")
     parser.add_argument(
         "--options",
@@ -43,11 +42,9 @@ def parse_args():
         "in xxx=yyy format will be merged into config file (deprecate), "
         "change to --cfg-options instead.",
     )
-
     args = parser.parse_args()
     # if 'LOCAL_RANK' not in os.environ:
     #     os.environ['LOCAL_RANK'] = str(args.local_rank)
-
     return args
 
 
@@ -80,8 +77,6 @@ def main():
 
     cfg = Config(parse_args())
 
-    init_distributed_mode(cfg.run_cfg)
-
     setup_seeds(cfg)
 
     # set after init_distributed_mode() to only log on master.
@@ -100,4 +95,5 @@ def main():
 
 
 if __name__ == "__main__":
+    print("cuda is available: ", torch.cuda.is_available())
     main()
