@@ -27,6 +27,9 @@ import io
 
 from mtranslate import translate
 import os
+# import pandas lib as pd
+import pandas as pd
+import openpyxl
 
 
 def gen_cap(img_path):
@@ -127,6 +130,7 @@ def get_and_save_data():
     response_parse = 0
     text = ""
     text_dict = []
+    caption_file = pd.read_excel(os.path.dirname(os.path.abspath(__file__)) + '/DanHadani/caption_file.xlsx', usecols=[0, 4])
     for i in range(6):
         response = requests.get(
             "https://api.nli.org.il/openlibrary/search?api_key=AnGdUMDNPbU7IhCHgbreKF4Lou5spSCYklIFpWrc"
@@ -139,7 +143,7 @@ def get_and_save_data():
     json_data = []
     test_json_data = []
     # train
-    for i in range(50):
+    for i in range(100):
         # check if the item's metadata structure is matching Dan Hadani's pictures metadata structure
         if "http://purl.org/dc/elements/1.1/relation" in text_dict[i]:
             # get image link from the metadata
@@ -156,40 +160,49 @@ def get_and_save_data():
             raw_image.save(r'' + image_path + "/" + str(i) + '.png')
 #           create_caption(raw_image)
             # in order to get the image description use the manifest API
-            caption_request = text_dict[i]["http://purl.org/dc/elements/1.1/relation"][0]
-            caption_response = requests.get(caption_request.get("@id"))
-            caption_dict = json.loads(caption_response.text)
-            label_value = caption_dict['sequences'][0]['label']
-            translated_value = translate_cap(label_value)
-            # print("this is the 'real caption' before extracting the label: " + caption_text)
-            # print("this is the real caption before translation: ")
-            # print(label_value)
-            print("this is the real caption (after translation): ")
-            print(translate_cap(label_value))
-            print()
-            # add the annotation to the variable json_data
-            tmp = {}
-            tmp["image_id"] = str(i)
-            tmp["image"] = image_path + "/" + str(i) + '.png'
-            tmp["caption"] = translated_value
-            json_data.append(tmp)
-        train, test = train_test_split(json_data, test_size=0.1)
-        val, test = train_test_split(test, test_size=0.5)
-        for item in val:
-            tmp = {}
-            tmp["image_id"] = item["image_id"]
-            tmp["caption"] = item["caption"]
-            test_json_data.append(tmp)
-        # save the annotations in a json file
-        with open(os.path.dirname(os.path.abspath(__file__)) + '/DanHadani/annotations/DanHadani_train.json', 'w') as outfile:
-           json.dump(train, outfile)
-        with open(os.path.dirname(os.path.abspath(__file__)) + '/DanHadani/annotations/DanHadani_val.json', 'w') as outfile:
-         json.dump(val, outfile)
-        with open(os.path.dirname(os.path.abspath(__file__)) + '/DanHadani/annotations/DanHadani_test.json', 'w') as outfile:
-         json.dump(test, outfile)
-        with open(os.path.dirname(os.path.abspath(__file__)) + '/DanHadani/results/DanHadani_real_captions.json','w') as outfile:
-         json.dump(test_json_data, outfile)
-         # key: AnGdUMDNPbU7IhCHgbreKF4Lou5spSCYklIFpWrc
+            image_record = text_dict[i]["http://purl.org/dc/elements/1.1/recordid"][0].get("@value")
+            relevant_data = caption_file[caption_file["record"] == int(image_record)]
+            if not relevant_data.empty:
+                label_value = relevant_data["caption"].iloc[0]
+                if "Photo shows:" in label_value:
+                    label_value = label_value[label_value.find("Photo shows:") + len("Photo shows:"):]
+                elif "Photo shows" in label_value:
+                    label_value = label_value[label_value.find("Photo shows") + len("Photo shows"):]
+                else:
+                    label_value = ""
+                if label_value != "":
+                    label_value = label_value[:label_value.find(".")]
+                    # print("this is the 'real caption' before extracting the label: " + caption_text)
+                    # print("this is the real caption before translation: ")
+                    # print(label_value)
+                    print("this is the real caption: ")
+                    print(label_value)
+                    print()
+                    # add the annotation to the variable json_data
+                    tmp = {}
+                    tmp["image_id"] = str(i)
+                    tmp["image"] = image_path + "/" + str(i) + '.png'
+                    tmp["caption"] = label_value
+                    json_data.append(tmp)
+    train, test = train_test_split(json_data, test_size=0.1)
+    val, test = train_test_split(test, test_size=0.5)
+    for item in val:
+        tmp = {}
+        tmp["image_id"] = item["image_id"]
+        tmp["caption"] = item["caption"]
+        test_json_data.append(tmp)
+    # save the annotations in a json file
+    with open(os.path.dirname(os.path.abspath(__file__)) + '/DanHadani/annotations/DanHadani_train.json', 'w') as outfile:
+        json.dump(train, outfile)
+    with open(os.path.dirname(os.path.abspath(__file__)) + '/DanHadani/annotations/DanHadani_val.json', 'w') as outfile:
+        json.dump(val, outfile)
+    with open(os.path.dirname(os.path.abspath(__file__)) + '/DanHadani/annotations/DanHadani_test.json', 'w') as outfile:
+        json.dump(test, outfile)
+    with open(os.path.dirname(os.path.abspath(__file__)) + '/DanHadani/results/DanHadani_real_captions.json','w') as outfile:
+        json.dump(test_json_data, outfile)
+        # key: AnGdUMDNPbU7IhCHgbreKF4Lou5spSCYklIFpWrc
+
+
 def translate_cap(cap):
     # we use the API of Microsoft to translate the label to English
 
@@ -243,7 +256,7 @@ def print_scores():
 
 
 if __name__ == '__main__':
-    # get_and_save_data()
-    print_scores()
+    get_and_save_data()
+    #print_scores()
 
 
