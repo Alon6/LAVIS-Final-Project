@@ -127,63 +127,59 @@ def resize(image):
 def get_and_save_data():
 
     # load sample images
-    response_parse = 0
+    row_number = 1
+    picture_count = 0
     text = ""
     text_dict = []
     caption_file = pd.read_excel(os.path.dirname(os.path.abspath(__file__)) + '/DanHadani/caption_file.xlsx', usecols=[0, 4])
-    for i in range(6):
-        response = requests.get(
-            "https://api.nli.org.il/openlibrary/search?api_key=AnGdUMDNPbU7IhCHgbreKF4Lou5spSCYklIFpWrc"
-            "&query=any,contains,%D7%90%D7%A8%D7%9B%D7%99%D7%95%D7%9F%20%D7%93%D7%9F%20%D7%94%D7%93%D7%A0%D7%99"
-            "&availability_type=online_access"
-            "&material_type=photograph&output_format=json&result_page=" + str(i), verify=False)
-        text += json.dumps(response.json(), indent=4)
-        text_dict += json.loads(response.text)
     print(text)
     json_data = []
     test_json_data = []
-    # train
-    for i in range(100):
-        # check if the item's metadata structure is matching Dan Hadani's pictures metadata structure
-        if "http://purl.org/dc/elements/1.1/relation" in text_dict[i]:
-            # get image link from the metadata
-            image_add = text_dict[i]["http://purl.org/dc/elements/1.1/thumbnail"][0]
+    while picture_count < 50:
+        relevant_data = caption_file.iloc[row_number]
+        row_number += 1
+        label_value = str(relevant_data["caption"])
+        if "Photo shows:" in label_value:
+            label_value = label_value[label_value.find("Photo shows:") + len("Photo shows:"):]
+        elif "Photo shows" in label_value:
+            label_value = label_value[label_value.find("Photo shows") + len("Photo shows"):]
+        else:
+            label_value = ""
+        if label_value != "":
+            image_record = relevant_data["record"]
+            response = requests.get(
+                "https://api.nli.org.il/openlibrary/search?api_key=AnGdUMDNPbU7IhCHgbreKF4Lou5spSCYklIFpWrc"
+                "&query=system_number,exact," + str(image_record) +
+                "&availability_type=online_access"
+                "&material_type=photograph&output_format=json", verify=False)
+            text = json.dumps(response.json(), indent=4)
+            text_dict = json.loads(response.text)
+            image_add = text_dict[0]["http://purl.org/dc/elements/1.1/thumbnail"][0]
             fd = urllib.urlopen(image_add.get("@value"))
             image_file = io.BytesIO(fd.read())
             raw_image = Image.open(image_file).convert("RGB")
 
             # resize the image
             raw_image = resize(raw_image)
-
+            # create_caption(raw_image)
+            label_value = label_value[:label_value.find(".")]
+            # print("this is the 'real caption' before extracting the label: " + caption_text)
+            # print("this is the real caption before translation: ")
+            # print(label_value)
+            print("this is the real caption: ")
+            print(label_value)
+            print()
             # save the image
             image_path = os.path.dirname(os.path.abspath(__file__)) + "/DanHadani/images"
-            raw_image.save(r'' + image_path + "/" + str(i) + '.png')
-#           create_caption(raw_image)
-            # in order to get the image description use the manifest API
-            image_record = text_dict[i]["http://purl.org/dc/elements/1.1/recordid"][0].get("@value")
-            relevant_data = caption_file[caption_file["record"] == int(image_record)]
-            if not relevant_data.empty:
-                label_value = relevant_data["caption"].iloc[0]
-                if "Photo shows:" in label_value:
-                    label_value = label_value[label_value.find("Photo shows:") + len("Photo shows:"):]
-                elif "Photo shows" in label_value:
-                    label_value = label_value[label_value.find("Photo shows") + len("Photo shows"):]
-                else:
-                    label_value = ""
-                if label_value != "":
-                    label_value = label_value[:label_value.find(".")]
-                    # print("this is the 'real caption' before extracting the label: " + caption_text)
-                    # print("this is the real caption before translation: ")
-                    # print(label_value)
-                    print("this is the real caption: ")
-                    print(label_value)
-                    print()
-                    # add the annotation to the variable json_data
-                    tmp = {}
-                    tmp["image_id"] = str(i)
-                    tmp["image"] = image_path + "/" + str(i) + '.png'
-                    tmp["caption"] = label_value
-                    json_data.append(tmp)
+            raw_image.save(r'' + image_path + "/" + str(picture_count) + '.png')
+            # add the annotation to the variable json_data
+            tmp = {}
+            tmp["image_id"] = str(picture_count)
+            tmp["image"] = image_path + "/" + str(picture_count) + '.png'
+            tmp["caption"] = label_value
+            json_data.append(tmp)
+            picture_count += 1
+
     train, test = train_test_split(json_data, test_size=0.1)
     val, test = train_test_split(test, test_size=0.5)
     for item in val:
