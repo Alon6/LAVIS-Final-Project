@@ -233,7 +233,9 @@ def calc_scores(ref, hypo):
         else:
             final_scores[method] = score
     return final_scores
-def print_scores():
+
+
+def get_results():
     f = open(os.path.dirname(os.path.abspath(__file__)) + '/DanHadani/results/DanHadani_real_captions.json', )
     raw_ref = json.load(f)
     ref = dict()
@@ -246,13 +248,32 @@ def print_scores():
     for item in raw_hypo:
         hypo[item["image_id"]] = []
         hypo[item["image_id"]].append(item["caption"])
+    return ref, hypo
+
+
+def print_scores():
+    ref, hypo = get_results()
     scores = calc_scores(ref, hypo)
     for method, score in scores.items():
         print("The score for method " + method + " is: " + str(score))
 
 
+def print_results():
+    ref, hypo = get_results()
+    for id in ref:
+        ref_cap = str(ref[id])
+        ref_cap = ref_cap[2:len(ref_cap)-2]
+        hypo_cap = str(hypo[id])
+        hypo_cap = hypo_cap[2:len(hypo_cap) - 2]
+        image = Image.open(os.path.dirname(os.path.abspath(__file__)) + '/DanHadani/images/' + id + '.png')
+        print("Picture id: " + id)
+        print("Real caption: " + ref_cap)
+        print("Computed caption: " + hypo_cap)
+        image.show()
+
 if __name__ == '__main__':
-    get_and_save_data()
-    #print_scores()
+    # get_and_save_data()
+    # print_scores()
+    print_results()
 
 
