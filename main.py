@@ -154,7 +154,7 @@ def get_and_save_data():
                 "&material_type=photograph&output_format=json", verify=False)
             text = json.dumps(response.json(), indent=4)
             text_dict = json.loads(response.text)
-            if "http://purl.org/dc/elements/1.1/thumbnail" in text_dict[0].keys():
+            if len(text_dict) > 0:
                 image_add = text_dict[0]["http://purl.org/dc/elements/1.1/thumbnail"][0]
                 fd = urllib.urlopen(image_add.get("@value"))
                 image_file = io.BytesIO(fd.read())
