@@ -154,31 +154,32 @@ def get_and_save_data():
                 "&material_type=photograph&output_format=json", verify=False)
             text = json.dumps(response.json(), indent=4)
             text_dict = json.loads(response.text)
-            image_add = text_dict[0]["http://purl.org/dc/elements/1.1/thumbnail"][0]
-            fd = urllib.urlopen(image_add.get("@value"))
-            image_file = io.BytesIO(fd.read())
-            raw_image = Image.open(image_file).convert("RGB")
+            if "http://purl.org/dc/elements/1.1/thumbnail" in text_dict[0].keys():
+                image_add = text_dict[0]["http://purl.org/dc/elements/1.1/thumbnail"][0]
+                fd = urllib.urlopen(image_add.get("@value"))
+                image_file = io.BytesIO(fd.read())
+                raw_image = Image.open(image_file).convert("RGB")
 
-            # resize the image
-            raw_image = resize(raw_image)
-            # create_caption(raw_image)
-            label_value = label_value[:label_value.find(".")]
-            # print("this is the 'real caption' before extracting the label: " + caption_text)
-            # print("this is the real caption before translation: ")
-            # print(label_value)
-            print("this is the real caption: ")
-            print(label_value)
-            print()
-            # save the image
-            image_path = os.path.dirname(os.path.abspath(__file__)) + "/DanHadani/images"
-            raw_image.save(r'' + image_path + "/" + str(picture_count) + '.png')
-            # add the annotation to the variable json_data
-            tmp = {}
-            tmp["image_id"] = str(picture_count)
-            tmp["image"] = image_path + "/" + str(picture_count) + '.png'
-            tmp["caption"] = label_value
-            json_data.append(tmp)
-            picture_count += 1
+                # resize the image
+                raw_image = resize(raw_image)
+                # create_caption(raw_image)
+                label_value = label_value[:label_value.find(".")]
+                # print("this is the 'real caption' before extracting the label: " + caption_text)
+                # print("this is the real caption before translation: ")
+                # print(label_value)
+                print("this is the real caption: ")
+                print(label_value)
+                print()
+                # save the image
+                image_path = os.path.dirname(os.path.abspath(__file__)) + "/DanHadani/images"
+                raw_image.save(r'' + image_path + "/" + str(picture_count) + '.png')
+                # add the annotation to the variable json_data
+                tmp = {}
+                tmp["image_id"] = str(picture_count)
+                tmp["image"] = image_path + "/" + str(picture_count) + '.png'
+                tmp["caption"] = label_value
+                json_data.append(tmp)
+                picture_count += 1
 
     train, test = train_test_split(json_data, test_size=0.1)
     val, test = train_test_split(test, test_size=0.5)
@@ -220,7 +221,7 @@ def calc_scores(ref, hypo):
     """
     scorers = [
         (Bleu(4), ["Bleu_1", "Bleu_2", "Bleu_3", "Bleu_4"]),
-        (Meteor(),"METEOR"),
+        (Meteor(), "METEOR"),
         (Rouge(), "ROUGE_L"),
         (Cider(), "CIDEr")
     ]
@@ -272,8 +273,8 @@ def print_results():
         image.show()
 
 if __name__ == '__main__':
-    # get_and_save_data()
+    get_and_save_data()
     # print_scores()
-    print_results()
+    # print_results()
 
 
