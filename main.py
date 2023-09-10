@@ -3,7 +3,6 @@
 # my (Michael Rodel)  API key is: bx4AHabZdoyhD2HUkbm7HSecspuCqplmUi81PrEJ
 
 
-
 import numpy as np
 from collections import Counter
 
@@ -54,6 +53,7 @@ def gen_cap(img_path):
 
     out = model.generate(**inputs)
     print(processor.decode(out[0], skip_special_tokens=True))
+
 
 def dist_img_calc(img_path_1, img_path_2):
     # Reading
@@ -125,13 +125,13 @@ def resize(image):
 
 
 def get_and_save_data(number_of_samples):
-    
     # load sample images
     row_number = 1
     picture_count = 0
     text = ""
     text_dict = []
-    caption_file = pd.read_excel(os.path.dirname(os.path.abspath(__file__)) + '/DanHadani/caption_file.xlsx', usecols=[0, 4])
+    caption_file = pd.read_excel(os.path.dirname(os.path.abspath(__file__)) + '/DanHadani/caption_file.xlsx',
+                                 usecols=[0, 4])
     print(text)
     json_data = []
     test_json_data = []
@@ -154,32 +154,33 @@ def get_and_save_data(number_of_samples):
                 "&material_type=photograph&output_format=json", verify=False)
             text = json.dumps(response.json(), indent=4)
             text_dict = json.loads(response.text)
-            if "http://purl.org/dc/elements/1.1/thumbnail" in text_dict[0].keys():
-                image_add = text_dict[0]["http://purl.org/dc/elements/1.1/thumbnail"][0]
-                fd = urllib.urlopen(image_add.get("@value"))
-                image_file = io.BytesIO(fd.read())
-                raw_image = Image.open(image_file).convert("RGB")
+            if len(text_dict) > 0:
+                if "http://purl.org/dc/elements/1.1/thumbnail" in text_dict[0].keys():
+                    image_add = text_dict[0]["http://purl.org/dc/elements/1.1/thumbnail"][0]
+                    fd = urllib.urlopen(image_add.get("@value"))
+                    image_file = io.BytesIO(fd.read())
+                    raw_image = Image.open(image_file).convert("RGB")
 
-                # resize the image
-                raw_image = resize(raw_image)
-                # create_caption(raw_image)
-                label_value = label_value[:label_value.find(".")]
-                # print("this is the 'real caption' before extracting the label: " + caption_text)
-                # print("this is the real caption before translation: ")
-                # print(label_value)
-                print("this is the real caption: ")
-                print(label_value)
-                print()
-                # save the image
-                image_path = os.path.dirname(os.path.abspath(__file__)) + "/DanHadani/images"
-                raw_image.save(r'' + image_path + "/" + str(picture_count) + '.png')
-                # add the annotation to the variable json_data
-                tmp = {}
-                tmp["image_id"] = str(picture_count)
-                tmp["image"] = image_path + "/" + str(picture_count) + '.png'
-                tmp["caption"] = label_value
-                json_data.append(tmp)
-                picture_count += 1
+                    # resize the image
+                    raw_image = resize(raw_image)
+                    # create_caption(raw_image)
+                    label_value = label_value[:label_value.find(".")]
+                    # print("this is the 'real caption' before extracting the label: " + caption_text)
+                    # print("this is the real caption before translation: ")
+                    # print(label_value)
+                    print("this is the real caption: ")
+                    print(label_value)
+                    print()
+                    # save the image
+                    image_path = os.path.dirname(os.path.abspath(__file__)) + "/DanHadani/images"
+                    raw_image.save(r'' + image_path + "/" + str(picture_count) + '.png')
+                    # add the annotation to the variable json_data
+                    tmp = {}
+                    tmp["image_id"] = str(picture_count)
+                    tmp["image"] = image_path + "/" + str(picture_count) + '.png'
+                    tmp["caption"] = label_value
+                    json_data.append(tmp)
+                    picture_count += 1
 
     train, test = train_test_split(json_data, test_size=0.1)
     val, test = train_test_split(test, test_size=0.5)
@@ -189,13 +190,16 @@ def get_and_save_data(number_of_samples):
         tmp["caption"] = item["caption"]
         test_json_data.append(tmp)
     # save the annotations in a json file
-    with open(os.path.dirname(os.path.abspath(__file__)) + '/DanHadani/annotations/DanHadani_train.json', 'w') as outfile:
+    with open(os.path.dirname(os.path.abspath(__file__)) + '/DanHadani/annotations/DanHadani_train.json',
+              'w') as outfile:
         json.dump(train, outfile)
     with open(os.path.dirname(os.path.abspath(__file__)) + '/DanHadani/annotations/DanHadani_val.json', 'w') as outfile:
         json.dump(val, outfile)
-    with open(os.path.dirname(os.path.abspath(__file__)) + '/DanHadani/annotations/DanHadani_test.json', 'w') as outfile:
+    with open(os.path.dirname(os.path.abspath(__file__)) + '/DanHadani/annotations/DanHadani_test.json',
+              'w') as outfile:
         json.dump(test, outfile)
-    with open(os.path.dirname(os.path.abspath(__file__)) + '/DanHadani/results/DanHadani_real_captions.json','w') as outfile:
+    with open(os.path.dirname(os.path.abspath(__file__)) + '/DanHadani/results/DanHadani_real_captions.json',
+              'w') as outfile:
         json.dump(test_json_data, outfile)
         # key: AnGdUMDNPbU7IhCHgbreKF4Lou5spSCYklIFpWrc
 
@@ -206,6 +210,7 @@ def translate_cap(cap):
     translated_cap = translate(cap, "en")
     return translated_cap
 
+
 def L2Norm(H1, H2):
     H1 = np.array(H1, dtype=np.int64)
     H2 = np.array(H2, dtype=np.int64)
@@ -213,6 +218,8 @@ def L2Norm(H1, H2):
     for i in range(len(H1)):
         distance += np.square(H1[i] - H2[i])
     return np.sqrt(distance)
+
+
 def calc_scores(ref, hypo):
     """
     ref, dictionary of reference sentences (id, sentence)
@@ -267,7 +274,7 @@ def print_results():
     ref, hypo = get_results()
     for id in ref:
         ref_cap = str(ref[id])
-        ref_cap = ref_cap[2:len(ref_cap)-2]
+        ref_cap = ref_cap[2:len(ref_cap) - 2]
         hypo_cap = str(hypo[id])
         hypo_cap = hypo_cap[2:len(hypo_cap) - 2]
         image = Image.open(os.path.dirname(os.path.abspath(__file__)) + '/DanHadani/images/' + id + '.png')
@@ -276,9 +283,8 @@ def print_results():
         print("Computed caption: " + hypo_cap)
         image.show()
 
+
 if __name__ == '__main__':
     get_and_save_data(number_of_samples=1000)
     # print_scores()
     # print_results()
-
-
