@@ -3,7 +3,6 @@
 # my (Michael Rodel)  API key is: bx4AHabZdoyhD2HUkbm7HSecspuCqplmUi81PrEJ
 
 
-
 import numpy as np
 from collections import Counter
 
@@ -54,6 +53,7 @@ def gen_cap(img_path):
 
     out = model.generate(**inputs)
     print(processor.decode(out[0], skip_special_tokens=True))
+
 
 def dist_img_calc(img_path_1, img_path_2):
     # Reading
@@ -125,21 +125,13 @@ def resize(image):
 
 
 def get_and_save_data(number_of_samples):
-
     # load sample images
     row_number = 1
     picture_count = 0
     text = ""
     text_dict = []
-    caption_file = pd.read_excel(os.path.dirname(os.path.abspath(__file__)) + '/DanHadani/caption_file.xlsx', usecols=[0, 4])
-    for i in range(6):
-        response = requests.get(
-            "https://api.nli.org.il/openlibrary/search?api_key=AnGdUMDNPbU7IhCHgbreKF4Lou5spSCYklIFpWrc"
-            "&query=any,contains,%D7%90%D7%A8%D7%9B%D7%99%D7%95%D7%9F%20%D7%93%D7%9F%20%D7%94%D7%93%D7%A0%D7%99"
-            "&availability_type=online_access"
-            "&material_type=photograph&output_format=json&result_page=" + str(i), verify=False)
-        text += json.dumps(response.json(), indent=4)
-        text_dict += json.loads(response.text)
+    caption_file = pd.read_excel(os.path.dirname(os.path.abspath(__file__)) + '/DanHadani/caption_file.xlsx',
+                                 usecols=[0, 4])
     print(text)
     json_data = []
     test_json_data = []
@@ -196,13 +188,16 @@ def get_and_save_data(number_of_samples):
         tmp["caption"] = item["caption"]
         test_json_data.append(tmp)
     # save the annotations in a json file
-    with open(os.path.dirname(os.path.abspath(__file__)) + '/DanHadani/annotations/DanHadani_train.json', 'w') as outfile:
+    with open(os.path.dirname(os.path.abspath(__file__)) + '/DanHadani/annotations/DanHadani_train.json',
+              'w') as outfile:
         json.dump(train, outfile)
     with open(os.path.dirname(os.path.abspath(__file__)) + '/DanHadani/annotations/DanHadani_val.json', 'w') as outfile:
         json.dump(val, outfile)
-    with open(os.path.dirname(os.path.abspath(__file__)) + '/DanHadani/annotations/DanHadani_test.json', 'w') as outfile:
+    with open(os.path.dirname(os.path.abspath(__file__)) + '/DanHadani/annotations/DanHadani_test.json',
+              'w') as outfile:
         json.dump(test, outfile)
-    with open(os.path.dirname(os.path.abspath(__file__)) + '/DanHadani/results/DanHadani_real_captions.json','w') as outfile:
+    with open(os.path.dirname(os.path.abspath(__file__)) + '/DanHadani/results/DanHadani_real_captions.json',
+              'w') as outfile:
         json.dump(test_json_data, outfile)
         # key: AnGdUMDNPbU7IhCHgbreKF4Lou5spSCYklIFpWrc
 
@@ -213,6 +208,7 @@ def translate_cap(cap):
     translated_cap = translate(cap, "en")
     return translated_cap
 
+
 def L2Norm(H1, H2):
     H1 = np.array(H1, dtype=np.int64)
     H2 = np.array(H2, dtype=np.int64)
@@ -220,6 +216,8 @@ def L2Norm(H1, H2):
     for i in range(len(H1)):
         distance += np.square(H1[i] - H2[i])
     return np.sqrt(distance)
+
+
 def calc_scores(ref, hypo):
     """
     ref, dictionary of reference sentences (id, sentence)
@@ -228,7 +226,7 @@ def calc_scores(ref, hypo):
     """
     scorers = [
         (Bleu(4), ["Bleu_1", "Bleu_2", "Bleu_3", "Bleu_4"]),
-        (Meteor(),"METEOR"),
+        (Meteor(), "METEOR"),
         (Rouge(), "ROUGE_L"),
         (Cider(), "CIDEr")
     ]
@@ -245,8 +243,10 @@ def calc_scores(ref, hypo):
         else:
             final_scores[method] = score
     return final_scores
+
+
 def print_scores():
-    f = open(os.path.dirname(os.path.abspath(__file__)) + '/DanHadani/results/DanHadani_real_captions_DLC.json', )
+    f = open(os.path.dirname(os.path.abspath(__file__)) + '/DanHadani/results/DanHadani_real_captions.json', )
     raw_ref = json.load(f)
     ref = dict()
     for item in raw_ref:
@@ -265,7 +265,5 @@ def print_scores():
 
 
 if __name__ == '__main__':
-    get_and_save_data(number_of_samples=50)
+    get_and_save_data(number_of_samples=1000)
     # print_scores()
-
-
