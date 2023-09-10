@@ -124,7 +124,7 @@ def resize(image):
     return resized_image
 
 
-def get_and_save_data():
+def get_and_save_data(number_of_samples):
 
     # load sample images
     row_number = 1
@@ -132,10 +132,18 @@ def get_and_save_data():
     text = ""
     text_dict = []
     caption_file = pd.read_excel(os.path.dirname(os.path.abspath(__file__)) + '/DanHadani/caption_file.xlsx', usecols=[0, 4])
+    for i in range(6):
+        response = requests.get(
+            "https://api.nli.org.il/openlibrary/search?api_key=AnGdUMDNPbU7IhCHgbreKF4Lou5spSCYklIFpWrc"
+            "&query=any,contains,%D7%90%D7%A8%D7%9B%D7%99%D7%95%D7%9F%20%D7%93%D7%9F%20%D7%94%D7%93%D7%A0%D7%99"
+            "&availability_type=online_access"
+            "&material_type=photograph&output_format=json&result_page=" + str(i), verify=False)
+        text += json.dumps(response.json(), indent=4)
+        text_dict += json.loads(response.text)
     print(text)
     json_data = []
     test_json_data = []
-    while picture_count < 50:
+    while picture_count < number_of_samples:
         relevant_data = caption_file.iloc[row_number]
         row_number += 1
         label_value = str(relevant_data["caption"])
@@ -225,6 +233,10 @@ def calc_scores(ref, hypo):
         (Cider(), "CIDEr")
     ]
     final_scores = {}
+
+    # changing the keys' type of ref to int
+    ref = {int(k): v for k, v in ref.items()}
+
     for scorer, method in scorers:
         score, scores = scorer.compute_score(ref, hypo)
         if type(score) == list:
@@ -234,13 +246,14 @@ def calc_scores(ref, hypo):
             final_scores[method] = score
     return final_scores
 def print_scores():
-    f = open(os.path.dirname(os.path.abspath(__file__)) + '/DanHadani/results/DanHadani_real_captions.json', )
+    f = open(os.path.dirname(os.path.abspath(__file__)) + '/DanHadani/results/DanHadani_real_captions_DLC.json', )
     raw_ref = json.load(f)
     ref = dict()
     for item in raw_ref:
         ref[item["image_id"]] = []
         ref[item["image_id"]].append(item["caption"])
     f = open(os.path.dirname(os.path.abspath(__file__)) + '/DanHadani/results/DanHadani_computed_captions.json', )
+    # f = open(os.path.dirname(os.path.abspath(__file__)) + path_to_computed_caption, )
     raw_hypo = json.load(f)
     hypo = dict()
     for item in raw_hypo:
@@ -252,7 +265,7 @@ def print_scores():
 
 
 if __name__ == '__main__':
-    get_and_save_data()
-    #print_scores()
+    get_and_save_data(number_of_samples=50)
+    # print_scores()
 
 
