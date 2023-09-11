@@ -149,42 +149,37 @@ def get_and_save_data(number_of_samples):
                 label_value = ""
             if label_value != "":
                 image_record = relevant_data["record"]
-                response = requests.get(
-                    "https://api.nli.org.il/openlibrary/search?api_key=AnGdUMDNPbU7IhCHgbreKF4Lou5spSCYklIFpWrc"
-                    "&query=system_number,exact," + str(image_record) +
-                    "&availability_type=online_access"
-                    "&material_type=photograph&output_format=json", verify=False)
+                response = requests.get("http://iiif.nli.org.il/IIIFv21/" + str(image_record) + "/manifest", verify=False)
                 text = json.dumps(response.json(), indent=4)
                 text_dict = json.loads(response.text)
                 if len(text_dict) > 0:
-                    if text_dict[0].get("http://purl.org/dc/elements/1.1/thumbnail") is not None:
-                        image_add = text_dict[0]["http://purl.org/dc/elements/1.1/thumbnail"][0]
-                        fd = urllib.urlopen(image_add.get("@value"))
-                        image_file = io.BytesIO(fd.read())
-                        raw_image = Image.open(image_file).convert("RGB")
+                    image_add = text_dict["sequences"][0]["canvases"][0]["images"][0]["resource"]["@id"]
+                    fd = urllib.urlopen(image_add)
+                    image_file = io.BytesIO(fd.read())
+                    raw_image = Image.open(image_file).convert("RGB")
 
-                        # resize the image
-                        raw_image = resize(raw_image)
-                        # create_caption(raw_image)
-                        label_value = label_value[:label_value.find(".")]
-                        # print("this is the 'real caption' before extracting the label: " + caption_text)
-                        # print("this is the real caption before translation: ")
-                        # print(label_value)
-                        print("this is the real caption: ")
-                        print(label_value)
-                        print()
-                        # save the image
-                        image_path = os.path.dirname(os.path.abspath(__file__)) + "/DanHadani/images"
-                        raw_image.save(r'' + image_path + "/" + str(picture_count) + '.png')
-                        # add the annotation to the variable json_data
-                        tmp = {}
-                        tmp["image_id"] = str(picture_count)
-                        tmp["image"] = image_path + "/" + str(picture_count) + '.png'
-                        tmp["caption"] = label_value
-                        json_data.append(tmp)
-                        picture_count += 1
-                        error_counter = 0
-        except KeyError:
+                    # resize the image
+                    raw_image = resize(raw_image)
+                    # create_caption(raw_image)
+                    label_value = label_value[:label_value.find(".")]
+                    # print("this is the 'real caption' before extracting the label: " + caption_text)
+                    # print("this is the real caption before translation: ")
+                    # print(label_value)
+                    print("this is the real caption: ")
+                    print(label_value)
+                    print()
+                    # save the image
+                    image_path = os.path.dirname(os.path.abspath(__file__)) + "/DanHadani/images"
+                    raw_image.save(r'' + image_path + "/" + str(picture_count) + '.png')
+                    # add the annotation to the variable json_data
+                    tmp = {}
+                    tmp["image_id"] = str(picture_count)
+                    tmp["image"] = image_path + "/" + str(picture_count) + '.png'
+                    tmp["caption"] = label_value
+                    json_data.append(tmp)
+                    picture_count += 1
+                    error_counter = 0
+        except:
             print("invalid image format")
             error_counter += 1
             if error_counter > 10:
