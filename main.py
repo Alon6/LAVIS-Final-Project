@@ -142,12 +142,12 @@ def get_and_save_data(number_of_samples):
             row_number += 1
             label_value = str(relevant_data["caption"])
             if "Photo shows:" in label_value:
-                label_value = label_value[label_value.find("Photo shows:") + len("Photo shows:"):]
+                label_value = label_value[label_value.find("Photo shows:") + len("Photo shows: "):label_value.find(".")]
             elif "Photo shows" in label_value:
-                label_value = label_value[label_value.find("Photo shows") + len("Photo shows"):]
+                label_value = label_value[label_value.find("Photo shows") + len("Photo shows "):label_value.find(".")]
             else:
                 label_value = ""
-            if label_value != "":
+            if label_value != "" and " " in label_value:
                 image_record = relevant_data["record"]
                 response = requests.get("http://iiif.nli.org.il/IIIFv21/" + str(image_record) + "/manifest", verify=False)
                 text = json.dumps(response.json(), indent=4)
@@ -161,7 +161,6 @@ def get_and_save_data(number_of_samples):
                     # resize the image
                     raw_image = resize(raw_image)
                     # create_caption(raw_image)
-                    label_value = label_value[:label_value.find(".")]
                     # print("this is the 'real caption' before extracting the label: " + caption_text)
                     # print("this is the real caption before translation: ")
                     # print(label_value)
