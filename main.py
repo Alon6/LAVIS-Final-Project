@@ -259,7 +259,7 @@ def calc_scores(ref, hypo):
 
 
 def get_results():
-    f = open(os.path.dirname(os.path.abspath(__file__)) + '/DanHadani/results/DanHadani_real_captions.json', )
+    f = open(os.path.dirname(os.path.abspath(__file__)) + '/DanHadani/results/DanHadani_real_captions_DLC.json', )
     raw_ref = json.load(f)
     ref = dict()
     for item in raw_ref:
@@ -296,6 +296,6 @@ def print_results():
 
 
 if __name__ == '__main__':
-    get_and_save_data(number_of_samples=1000)
+    get_and_save_data(number_of_samples=50)
     # print_scores()
     # print_results()

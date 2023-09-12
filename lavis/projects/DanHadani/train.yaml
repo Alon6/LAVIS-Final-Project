@@ -41,7 +41,7 @@ run:
   num_beams: 3
 
   seed: 42
-  output_dir: "output/BLIP/Caption_DanHadani"
+  output_dir: "output/BLIP/Caption_DanHadani/train"
 
   amp: False
   resume_ckpt_path: null
