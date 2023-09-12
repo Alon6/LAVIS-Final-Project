@@ -135,6 +135,7 @@ def get_and_save_data(number_of_samples):
                                  usecols=[0, 4])
     print(text)
     json_data = []
+    eval_json_data = []
     test_json_data = []
     while picture_count < number_of_samples:
         try:
@@ -190,6 +191,11 @@ def get_and_save_data(number_of_samples):
         tmp = {}
         tmp["image_id"] = item["image_id"]
         tmp["caption"] = item["caption"]
+        eval_json_data.append(tmp)
+    for item in test:
+        tmp = {}
+        tmp["image_id"] = item["image_id"]
+        tmp["caption"] = item["caption"]
         test_json_data.append(tmp)
     # save the annotations in a json file
     with open(os.path.dirname(os.path.abspath(__file__)) + '/DanHadani/annotations/DanHadani_train.json',
@@ -200,9 +206,12 @@ def get_and_save_data(number_of_samples):
     with open(os.path.dirname(os.path.abspath(__file__)) + '/DanHadani/annotations/DanHadani_test.json',
               'w') as outfile:
         json.dump(test, outfile)
-    with open(os.path.dirname(os.path.abspath(__file__)) + '/DanHadani/results/DanHadani_real_captions.json',
+    with open(os.path.dirname(os.path.abspath(__file__)) + '/DanHadani/results/DanHadani_eval_real_captions.json',
               'w') as outfile:
-        json.dump(test_json_data, outfile)
+        json.dump(eval_json_data, outfile)
+    with open(os.path.dirname(os.path.abspath(__file__)) + '/DanHadani/results/DanHadani_test_real_captions.json',
+                  'w') as outfile:
+            json.dump(test_json_data, outfile)
         # key: AnGdUMDNPbU7IhCHgbreKF4Lou5spSCYklIFpWrc
 
 
