@@ -137,8 +137,8 @@ def get_and_save_data(number_of_samples):
     json_data = []
     test_json_data = []
     coco_format_data = dict()
-    coco_format_data["annotations"] = {}
-    coco_format_data["images"] = {}
+    coco_format_data["annotations"] = []
+    coco_format_data["images"] = []
     while picture_count < number_of_samples:
         try:
             relevant_data = caption_file.iloc[row_number]
@@ -179,14 +179,6 @@ def get_and_save_data(number_of_samples):
                     tmp["image"] = image_path + "/" + str(picture_count) + '.jpg'
                     tmp["caption"] = label_value
                     json_data.append(tmp)
-                    tmp = {}
-                    tmp["image_id"] = str(picture_count)
-                    tmp["caption"] = callable()
-                    tmp["id"] = str(picture_count)
-                    coco_format_data["annotations"].append(tmp)
-                    tmp = {}
-                    tmp["id"] = str(picture_count)
-                    coco_format_data["images"].append(tmp)
                     picture_count += 1
                     error_counter = 0
         except:
@@ -198,9 +190,17 @@ def get_and_save_data(number_of_samples):
     train, test = train_test_split(json_data, test_size=0.1)
     for item in test:
         tmp = {}
-        tmp["image_id"] = item["image_id"]
+        tmp["image"] = item["image"]
         tmp["caption"] = item["caption"]
         test_json_data.append(tmp)
+        tmp = {}
+        tmp["image_id"] = item["image_id"]
+        tmp["caption"] = item["caption"]
+        tmp["id"] = item["image_id"]
+        coco_format_data["annotations"].append(tmp)
+        tmp = {}
+        tmp["id"] = item["image_id"]
+        coco_format_data["images"].append(tmp)
     # save the annotations in a json file
     with open(os.path.dirname(os.path.abspath(__file__)) + '/DanHadani/annotations/DanHadani_train.json',
               'w') as outfile:
@@ -297,7 +297,7 @@ def print_results():
 
 
 if __name__ == '__main__':
-    get_and_save_data(number_of_samples=1000)
+    get_and_save_data(number_of_samples=10)
     # print_scores()
     # print_results()
 
