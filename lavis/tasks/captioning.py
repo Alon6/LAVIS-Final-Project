@@ -121,7 +121,7 @@ def coco_caption_eval(coco_gt_root, results_file, split):
         "test": "DanHadani/annotations/DanHadani_test.json",
     }
     annotation_file = os.path.join(coco_gt_root, filenames[split])
-
+    print("annotation file path is: " + annotation_file)
     # create coco object and coco_result object
     coco = COCO(annotation_file)
     coco_result = coco.loadRes(results_file)
