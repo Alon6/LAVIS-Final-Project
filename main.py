@@ -181,7 +181,7 @@ def get_and_save_data(number_of_samples):
                     json_data.append(tmp)
                     tmp = {}
                     tmp["image_id"] = str(picture_count)
-                    tmp["caption"] = callable()
+                    tmp["caption"] = label_value
                     tmp["id"] = str(picture_count)
                     coco_format_data["annotations"].append(tmp)
                     tmp = {}
