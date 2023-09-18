@@ -34,7 +34,7 @@ class DanHadaniEvalDataset(CaptionEvalDataset):
 
         image = self.vis_processor(image)
 
-        img_id = ann["image_id"]
+        img_id = ann["image"].split("/")[-1].strip(".jpg")
 
         return {
             "image": image,

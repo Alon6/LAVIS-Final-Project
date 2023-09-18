@@ -135,8 +135,10 @@ def get_and_save_data(number_of_samples):
                                  usecols=[0, 4])
     print(text)
     json_data = []
-    eval_json_data = []
     test_json_data = []
+    coco_format_data = dict()
+    coco_format_data["annotations"] = {}
+    coco_format_data["images"] = {}
     while picture_count < number_of_samples:
         try:
             relevant_data = caption_file.iloc[row_number]
@@ -170,13 +172,21 @@ def get_and_save_data(number_of_samples):
                     print()
                     # save the image
                     image_path = os.path.dirname(os.path.abspath(__file__)) + "/DanHadani/images"
-                    raw_image.save(r'' + image_path + "/" + str(picture_count) + '.png')
+                    raw_image.save(r'' + image_path + "/" + str(picture_count) + '.jpg')
                     # add the annotation to the variable json_data
                     tmp = {}
                     tmp["image_id"] = str(picture_count)
-                    tmp["image"] = image_path + "/" + str(picture_count) + '.png'
+                    tmp["image"] = image_path + "/" + str(picture_count) + '.jpg'
                     tmp["caption"] = label_value
                     json_data.append(tmp)
+                    tmp = {}
+                    tmp["image_id"] = str(picture_count)
+                    tmp["caption"] = callable()
+                    tmp["id"] = str(picture_count)
+                    coco_format_data["annotations"].append(tmp)
+                    tmp = {}
+                    tmp["id"] = str(picture_count)
+                    coco_format_data["images"].append(tmp)
                     picture_count += 1
                     error_counter = 0
         except:
@@ -186,12 +196,6 @@ def get_and_save_data(number_of_samples):
                 row_number += 1000
 
     train, test = train_test_split(json_data, test_size=0.1)
-    val, test = train_test_split(test, test_size=0.5)
-    for item in val:
-        tmp = {}
-        tmp["image_id"] = item["image_id"]
-        tmp["caption"] = item["caption"]
-        eval_json_data.append(tmp)
     for item in test:
         tmp = {}
         tmp["image_id"] = item["image_id"]
@@ -202,16 +206,13 @@ def get_and_save_data(number_of_samples):
               'w') as outfile:
         json.dump(train, outfile)
     with open(os.path.dirname(os.path.abspath(__file__)) + '/DanHadani/annotations/DanHadani_val.json', 'w') as outfile:
-        json.dump(val, outfile)
+        json.dump(test_json_data, outfile)
     with open(os.path.dirname(os.path.abspath(__file__)) + '/DanHadani/annotations/DanHadani_test.json',
               'w') as outfile:
-        json.dump(test, outfile)
+        json.dump(test_json_data, outfile)
     with open(os.path.dirname(os.path.abspath(__file__)) + '/DanHadani/results/DanHadani_eval_real_captions.json',
-              'w') as outfile:
-        json.dump(eval_json_data, outfile)
-    with open(os.path.dirname(os.path.abspath(__file__)) + '/DanHadani/results/DanHadani_test_real_captions.json',
                   'w') as outfile:
-            json.dump(test_json_data, outfile)
+            json.dump(coco_format_data, outfile)
         # key: AnGdUMDNPbU7IhCHgbreKF4Lou5spSCYklIFpWrc
 
 
@@ -259,7 +260,7 @@ def calc_scores(ref, hypo):
 
 
 def get_results():
-    f = open(os.path.dirname(os.path.abspath(__file__)) + '/DanHadani/results/DanHadani_real_captions_DLC.json', )
+    f = open(os.path.dirname(os.path.abspath(__file__)) + '/DanHadani/annotations/DanHadani_val.json', )
     raw_ref = json.load(f)
     ref = dict()
     for item in raw_ref:
@@ -296,7 +297,7 @@ def print_results():
 
 
 if __name__ == '__main__':
-    get_and_save_data(number_of_samples=50)
+    get_and_save_data(number_of_samples=1000)
     # print_scores()
     # print_results()
 
