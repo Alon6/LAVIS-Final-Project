@@ -117,8 +117,8 @@ def coco_caption_eval(coco_gt_root, results_file, split):
 
 #    download_url(urls[split], coco_gt_root)
     filenames = {
-        "val": "DanHadani/annotations/DanHadani_val.json",
-        "test": "DanHadani/annotations/DanHadani_test.json",
+        "val": "DanHadani/results/DanHadani_eval_real_captions.json",
+        "test": "DanHadani/results/DanHadani_eval_real_captions.json",
     }
     annotation_file = os.path.join(coco_gt_root, filenames[split])
     print("annotation file path is: " + annotation_file)
