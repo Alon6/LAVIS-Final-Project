@@ -83,9 +83,8 @@ class CaptionTask(BaseTask):
     def _report_metrics(self, eval_result_file, split_name):
 
         # TODO better way to define this
-        coco_gt_root = os.path.join(registry.get_path("cache_root"), "coco_gt")
+        coco_gt_root = os.path.join(registry.get_path("cache_root"), os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
         coco_val = coco_caption_eval(coco_gt_root, eval_result_file, split_name)
-
         agg_metrics = coco_val.eval["CIDEr"] + coco_val.eval["Bleu_4"]
         log_stats = {split_name: {k: v for k, v in coco_val.eval.items()}}
 
@@ -107,16 +106,20 @@ from torchvision.datasets.utils import download_url
 
 
 def coco_caption_eval(coco_gt_root, results_file, split):
-    urls = {
-        "val": "https://storage.googleapis.com/sfr-vision-language-research/datasets/coco_karpathy_val_gt.json",
-        "test": "https://storage.googleapis.com/sfr-vision-language-research/datasets/coco_karpathy_test_gt.json",
-    }
-    filenames = {
-        "val": "coco_karpathy_val_gt.json",
-        "test": "coco_karpathy_test_gt.json",
-    }
+#    urls = {
+#        "val": "https://storage.googleapis.com/sfr-vision-language-research/datasets/coco_karpathy_val_gt.json",
+#        "test": "https://storage.googleapis.com/sfr-vision-language-research/datasets/coco_karpathy_test_gt.json",
+#    }
+#    filenames = {
+#        "val": "coco_karpathy_val_gt.json",
+#        "test": "coco_karpathy_test_gt.json",
+#    }
 
-    download_url(urls[split], coco_gt_root)
+#    download_url(urls[split], coco_gt_root)
+    filenames = {
+        "val": "DanHadani/annotations/DanHadani_val.json",
+        "test": "DanHadani/annotations/DanHadani_test.json",
+    }
     annotation_file = os.path.join(coco_gt_root, filenames[split])
 
     # create coco object and coco_result object
