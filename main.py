@@ -175,17 +175,17 @@ def get_and_save_data(number_of_samples):
                     raw_image.save(r'' + image_path + "/" + str(picture_count) + '.jpg')
                     # add the annotation to the variable json_data
                     tmp = {}
-                    tmp["image_id"] = str(picture_count)
+                    tmp["image_id"] = picture_count
                     tmp["image"] = image_path + "/" + str(picture_count) + '.jpg'
                     tmp["caption"] = label_value
                     json_data.append(tmp)
                     tmp = {}
-                    tmp["image_id"] = str(picture_count)
+                    tmp["image_id"] = picture_count
                     tmp["caption"] = label_value
-                    tmp["id"] = str(picture_count)
+                    tmp["id"] = picture_count
                     coco_format_data["annotations"].append(tmp)
                     tmp = {}
-                    tmp["id"] = str(picture_count)
+                    tmp["id"] = picture_count
                     coco_format_data["images"].append(tmp)
 
                     picture_count += 1
