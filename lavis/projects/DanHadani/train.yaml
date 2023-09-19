@@ -9,6 +9,8 @@ model:
   model_type: base_coco
   load_finetuned: False
 
+  finetuned: "output/BLIP/Caption_DanHadani/FineTuned"
+
 datasets:
   DanHadani: # name of the dataset builder
     vis_processor:

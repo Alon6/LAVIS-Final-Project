@@ -124,6 +124,7 @@ def coco_caption_eval(coco_gt_root, results_file, split):
     print("annotation file path is: " + annotation_file)
     # create coco object and coco_result object
     coco = COCO(annotation_file)
+    print("results file path is: " + results_file)
     coco_result = coco.loadRes(results_file)
 
     # create coco_eval object by taking coco and coco_result
