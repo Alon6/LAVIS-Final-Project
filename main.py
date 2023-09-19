@@ -178,6 +178,14 @@ def get_and_save_data(number_of_samples):
                     tmp["image_id"] = str(picture_count)
                     tmp["image"] = image_path + "/" + str(picture_count) + '.jpg'
                     tmp["caption"] = label_value
+                    tmp = {}
+                    tmp["image_id"] = str(picture_count)
+                    tmp["caption"] = label_value
+                    tmp["id"] = str(picture_count)
+                    coco_format_data["annotations"].append(tmp)
+                    tmp = {}
+                    tmp["id"] = str(picture_count)
+                    coco_format_data["images"].append(tmp)
                     json_data.append(tmp)
                     picture_count += 1
                     error_counter = 0
@@ -193,14 +201,6 @@ def get_and_save_data(number_of_samples):
         tmp["image"] = item["image"]
         tmp["caption"] = item["caption"]
         test_json_data.append(tmp)
-        tmp = {}
-        tmp["image_id"] = item["image_id"]
-        tmp["caption"] = item["caption"]
-        tmp["id"] = item["image_id"]
-        coco_format_data["annotations"].append(tmp)
-        tmp = {}
-        tmp["id"] = item["image_id"]
-        coco_format_data["images"].append(tmp)
     # save the annotations in a json file
     with open(os.path.dirname(os.path.abspath(__file__)) + '/DanHadani/annotations/DanHadani_train.json',
               'w') as outfile:
