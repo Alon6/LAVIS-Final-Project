@@ -125,12 +125,12 @@ def resize(image):
 
 
 def get_and_save_data(number_of_samples):
-    # load sample images
     row_number = 1
     error_counter = 0
     picture_count = 0
     text = ""
     text_dict = []
+    # Load Excel file
     caption_file = pd.read_excel(os.path.dirname(os.path.abspath(__file__)) + '/DanHadani/caption_file.xlsx',
                                  usecols=[0, 4])
     print(text)
@@ -139,8 +139,10 @@ def get_and_save_data(number_of_samples):
     coco_format_data = dict()
     coco_format_data["annotations"] = []
     coco_format_data["images"] = []
+    # Scan the Excel file and save any valid pair of image - caption
     while picture_count < number_of_samples:
         try:
+            # Load potential caption and check if it's valid
             relevant_data = caption_file.iloc[row_number]
             row_number += 1
             label_value = str(relevant_data["caption"])
@@ -150,6 +152,7 @@ def get_and_save_data(number_of_samples):
                 label_value = label_value[label_value.find("Photo shows") + len("Photo shows "):label_value.find(".")]
             else:
                 label_value = ""
+                # If the caption is valid then use the API and get the corresponding image
             if label_value != "" and " " in label_value:
                 image_record = relevant_data["record"]
                 response = requests.get("http://iiif.nli.org.il/IIIFv21/" + str(image_record) + "/manifest", verify=False)
@@ -164,9 +167,6 @@ def get_and_save_data(number_of_samples):
                     # resize the image
                     raw_image = resize(raw_image)
                     # create_caption(raw_image)
-                    # print("this is the 'real caption' before extracting the label: " + caption_text)
-                    # print("this is the real caption before translation: ")
-                    # print(label_value)
                     print("this is the real caption: ")
                     print(label_value)
                     print()
@@ -188,8 +188,10 @@ def get_and_save_data(number_of_samples):
             if error_counter > 10:
                 row_number += 1000
 
+    # Split between train and test
     train, test = train_test_split(json_data, test_size=0.1)
     for item in test:
+        # Create required annotation formats (one format for evaluating and one for calculating score metrics)
         tmp = {}
         tmp["image"] = item["image"]
         tmp["caption"] = item["caption"]
@@ -202,7 +204,7 @@ def get_and_save_data(number_of_samples):
         tmp = {}
         tmp["id"] = item["image_id"]
         coco_format_data["images"].append(tmp)
-    # save the annotations in a json file
+    # save the annotations formats in json files
     with open(os.path.dirname(os.path.abspath(__file__)) + '/DanHadani/annotations/DanHadani_train.json',
               'w') as outfile:
         json.dump(train, outfile)
@@ -239,6 +241,7 @@ def calc_scores(ref, hypo):
     hypo, dictionary of hypothesis sentences (id, sentence)
     score, dictionary of scores
     """
+    # Initializing scorers
     scorers = [
         (Bleu(4), ["Bleu_1", "Bleu_2", "Bleu_3", "Bleu_4"]),
         (Meteor(), "METEOR"),
@@ -246,10 +249,7 @@ def calc_scores(ref, hypo):
         (Cider(), "CIDEr")
     ]
     final_scores = {}
-
-    # changing the keys' type of ref to int
-    ref = {int(k): v for k, v in ref.items()}
-
+    # Computing the score of each metric
     for scorer, method in scorers:
         score, scores = scorer.compute_score(ref, hypo)
         if type(score) == list:
@@ -261,6 +261,7 @@ def calc_scores(ref, hypo):
 
 
 def get_results():
+    # Getting and parsing results
     f = open(os.path.dirname(os.path.abspath(__file__)) + '/DanHadani/annotations/DanHadani_val.json', )
     raw_ref = json.load(f)
     ref = dict()
@@ -298,7 +299,7 @@ def print_results():
 
 
 if __name__ == '__main__':
-    get_and_save_data(number_of_samples=10)
+    get_and_save_data(number_of_samples=64)
     # print_scores()
     # print_results()
 
