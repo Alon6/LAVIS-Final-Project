@@ -178,6 +178,7 @@ def get_and_save_data(number_of_samples):
                     tmp["image_id"] = str(picture_count)
                     tmp["image"] = image_path + "/" + str(picture_count) + '.jpg'
                     tmp["caption"] = label_value
+                    json_data.append(tmp)
                     tmp = {}
                     tmp["image_id"] = str(picture_count)
                     tmp["caption"] = label_value
@@ -186,7 +187,7 @@ def get_and_save_data(number_of_samples):
                     tmp = {}
                     tmp["id"] = str(picture_count)
                     coco_format_data["images"].append(tmp)
-                    json_data.append(tmp)
+
                     picture_count += 1
                     error_counter = 0
         except:
