@@ -124,7 +124,7 @@ def resize(image):
     return resized_image
 
 
-def get_and_save_data(number_of_samples):
+def get_and_save_data(number_of_samples, target_word):
     row_number = 1
     error_counter = 0
     picture_count = 0
@@ -153,7 +153,7 @@ def get_and_save_data(number_of_samples):
             else:
                 label_value = ""
                 # If the caption is valid then use the API and get the corresponding image
-            if label_value != "" and " " in label_value:
+            if label_value != "" and " " in label_value and (target_word == "" or target_word in label_value):
                 image_record = relevant_data["record"]
                 response = requests.get("http://iiif.nli.org.il/IIIFv21/" + str(image_record) + "/manifest", verify=False)
                 text = json.dumps(response.json(), indent=4)
@@ -187,9 +187,12 @@ def get_and_save_data(number_of_samples):
             error_counter += 1
             if error_counter > 10:
                 row_number += 1000
-
-    # Split between train and test
-    train, test = train_test_split(json_data, test_size=0.1)
+    if target_word == "":
+        # Split between train and test
+        train, test = train_test_split(json_data, test_size=0.1)
+    else:
+        train = json_data
+        test = json_data
     for item in test:
         # Create required annotation formats (one format for evaluating and one for calculating score metrics)
         tmp = {}
@@ -299,7 +302,7 @@ def print_results():
 
 
 if __name__ == '__main__':
-    get_and_save_data(number_of_samples=64)
+    get_and_save_data(number_of_samples=10, target_word="")
     # print_scores()
     # print_results()
 
