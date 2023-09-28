@@ -140,7 +140,7 @@ def get_and_save_data(number_of_samples, target_word):
     coco_format_data["annotations"] = []
     coco_format_data["images"] = []
     # Scan the Excel file and save any valid pair of image - caption
-    while picture_count < number_of_samples:
+    while picture_count < number_of_samples and caption_file.size > 2 * row_number:
         try:
             # Load potential caption and check if it's valid
             relevant_data = caption_file.iloc[row_number]
