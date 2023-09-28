@@ -187,12 +187,7 @@ def get_and_save_data(number_of_samples, target_word):
             error_counter += 1
             if error_counter > 10:
                 row_number += 1000
-    if target_word == "":
-        # Split between train and test
-        train, test = train_test_split(json_data, test_size=0.1)
-    else:
-        train = json_data
-        test = json_data
+    train, test = train_test_split(json_data, test_size=0.1)
     for item in test:
         # Create required annotation formats (one format for evaluating and one for calculating score metrics)
         tmp = {}
